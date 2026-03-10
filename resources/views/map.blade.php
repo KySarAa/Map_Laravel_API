@@ -33,7 +33,7 @@
 
 
 
-    <!-- Contrôles -->
+    <!-- Contr les -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin:0">Contr&ocirc;le Mission</h3>
@@ -75,7 +75,7 @@
         var map = L.map('map').setView([48.8566, 2.3522], 18);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '© OpenStreetMap'
+            attribution: '  OpenStreetMap'
         }).addTo(map);
 
         var roverMarker = L.marker([48.8566, 2.3522]).addTo(map).bindPopup('Rover RTK');
@@ -116,7 +116,7 @@
         var drawControl = new L.Control.Draw(drawOptions);
         map.addControl(drawControl);
 
-        // Gestion de la création de zone
+        // Gestion de la cr ation de zone
         map.on(L.Draw.Event.CREATED, function (e) {
             var type = e.layerType,
                 layer = e.layer;
@@ -126,16 +126,16 @@
                 editableLayers.clearLayers();
                 editableLayers.addLayer(layer);
                 workingZone = layer;
-                console.log("Nouvelle zone de travail définie");
+                console.log("Nouvelle zone de travail d finie");
                 // Rafraichir les couleurs des points existants
                 // On peut relancer loadGPSPath pour recolorier
-                // loadGPSPath(); // Pas idéal car fetch async, on verra
+                // loadGPSPath(); // Pas id al car fetch async, on verra
             }
         });
 
         map.on(L.Draw.Event.DELETED, function (e) {
             workingZone = null;
-            console.log("Zone de travail supprimée");
+            console.log("Zone de travail supprim e");
         });
 
         // Algorithme Ray-Casting
@@ -168,7 +168,7 @@
             return inside;
         }
 
-        // Fonction pour charger/rafraîchir les points GPS
+        // Fonction pour charger/rafra chir les points GPS
         function loadGPSPath() {
             var missionId = "{{ optional($mission)->id }}";
             if (!missionId) return;
@@ -179,7 +179,7 @@
                     if (data.status === 'success' && data.points.length > 0) {
                         var points = data.points;
 
-                        // On redessine tout à chaque fois pour simplifier la coloration dynamique
+                        // On redessine tout   chaque fois pour simplifier la coloration dynamique
                         // Optimisation: faire un diff si les perfs chutent
                         if (true) { 
                             pathGroup.clearLayers();
@@ -237,10 +237,10 @@
                 .catch(err => console.error('Erreur chargement points GPS:', err));
         }
 
-        // Charger les points au démarrage
+        // Charger les points au d marrage
         loadGPSPath();
 
-        // Rafraîchir automatiquement toutes les 3 secondes
+        // Rafra chir automatiquement toutes les 3 secondes
         setInterval(loadGPSPath, 3000);
 
         // Connexion WebSocket (Simulation si echec)
@@ -302,7 +302,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        location.reload(); // Recharger pour mettre à jour l'UI
+                        location.reload(); // Recharger pour mettre   jour l'UI
                     } else {
                         alert("Erreur: " + data.message);
                     }
@@ -310,19 +310,19 @@
                 .catch(err => console.error(err));
         }
 
-        // Fonction pour charger les détections
+        // Fonction pour charger les d tections
         function loadDetections() {
             var missionId = "{{ optional($mission)->id }}";
             if (!missionId) return;
 
-            // Note: On pourrait créer un endpoint /api/mission/{id}/detections
+            // Note: On pourrait cr er un endpoint /api/mission/{id}/detections
             // Pour l'instant on utilise un fallback ou on fetch tout
             fetch('/api/history') // Ou un nouvel endpoint si existant
                 .then(response => response.json())
-                .catch(err => console.log("En attente d'un endpoint de liste des détections"));
+                .catch(err => console.log("En attente d'un endpoint de liste des d tections"));
         }
 
-        // Rafraîchir les détections
+        // Rafra chir les d tections
         // loadDetections();
         // setInterval(loadDetections, 5000);
 

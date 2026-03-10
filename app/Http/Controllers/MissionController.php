@@ -71,16 +71,16 @@ class MissionController extends Controller
         if ($missionId) {
             $mission = Mission::find($missionId);
         } else {
-            // Récupère la mission en cours si elle existe
+            // R cup re la mission en cours si elle existe
             $mission = Mission::where('statut', 'ongoing')->latest()->first();
 
-            // Si aucune mission en cours, on prend la plus récente pending
+            // Si aucune mission en cours, on prend la plus r cente pending
             if (!$mission) {
                 $mission = Mission::where('statut', 'pending')->latest()->first();
             }
         }
 
-        // Récupère les missions disponibles à charger (pas encore terminées ou annulées)
+        // R cup re les missions disponibles   charger (pas encore termin es ou annul es)
         $availableMissions = Mission::whereIn('statut', ['pending', 'ongoing', 'paused'])
             ->orderBy('date_mission', 'desc')
             ->get();
@@ -137,7 +137,7 @@ class MissionController extends Controller
         $mission->operator_id = Auth::id();
         $mission->save();
 
-        return redirect()->route('missions')->with('success', 'Mission créée avec succès !');
+        return redirect()->route('missions')->with('success', 'Mission cr  e avec succ s !');
     }
 
     public function destroy(int $id)
@@ -145,7 +145,7 @@ class MissionController extends Controller
         $mission = Mission::findOrFail($id);
         $mission->delete();
 
-        return redirect()->route('missions')->with('success', 'Mission supprimée avec succès !');
+        return redirect()->route('missions')->with('success', 'Mission supprim e avec succ s !');
     }
 
     // --- API METHODS ---
@@ -164,7 +164,7 @@ class MissionController extends Controller
         ]);
     }
 
-    public function apiUpdateStatus(Request $request)
+    public function apiUpdateStatus(Request $request, \App\Services\MqttService $mqtt)
     {
         $validated = $request->validate([
             'mission_id' => 'required|exists:missions,id',
@@ -172,8 +172,23 @@ class MissionController extends Controller
         ]);
 
         $mission = Mission::find($validated['mission_id']);
+        $oldStatus = $mission->statut;
         $mission->statut = $validated['status'];
         $mission->save();
+
+        // Automatisation MQTT
+        try {
+            if ($validated['status'] === 'ongoing') {
+                // Démarrage ou Reprise
+                $mqtt->send('raspberry/cmd', 'run:RTKfinal');
+            } elseif ($validated['status'] === 'completed' || $validated['status'] === 'cancelled') {
+                // Fin de mission ou Annulation
+                $mqtt->send('raspberry/cmd', 'stop:RTKfinal');
+            }
+        } catch (\Exception $e) {
+            // On log l'erreur mais on ne bloque pas la réponse API si le MQTT échoue
+            \Illuminate\Support\Facades\Log::error("Erreur MQTT lors du changement de statut: " . $e->getMessage());
+        }
 
         return response()->json(['status' => 'success', 'message' => 'Status updated']);
     }
@@ -203,7 +218,7 @@ class MissionController extends Controller
 
     public function apiStoreDetection(Request $request)
     {
-        // Enregistrement d'une détection IA
+        // Enregistrement d'une d tection IA
         // Expected: mission_id, lat, lon, class_ia, confidence, image (file or base64)
 
         $validated = $request->validate([
@@ -214,11 +229,11 @@ class MissionController extends Controller
             'confidence' => 'required|numeric'
         ]);
 
-        // TODO: Gérer l'upload d'image si présent
+        // TODO: G rer l'upload d'image si pr sent
         // $path = $request->file('image')->store('detections');
 
-        // Créer l'entrée
-        // Note: Il faut adapter selon le modèle Detection
+        // Cr er l'entr e
+        // Note: Il faut adapter selon le mod le Detection
         $detection = new \App\Models\Detection();
         $detection->mission_id = $validated['mission_id'];
         $detection->latitude = $validated['lat'];
@@ -235,8 +250,8 @@ class MissionController extends Controller
 
     public function apiGnssData(Request $request)
     {
-        // Endpoint simplifié pour le script Python RTK
-        // Ne nécessite pas de mission_id (trouve la mission en cours auto)
+        // Endpoint simplifi  pour le script Python RTK
+        // Ne n cessite pas de mission_id (trouve la mission en cours auto)
 
         $validated = $request->validate([
             'latitude' => 'required|numeric',
@@ -248,19 +263,19 @@ class MissionController extends Controller
         // 1. Trouver la mission en cours
         $mission = Mission::where('statut', 'ongoing')->latest()->first();
 
-        // Si aucune mission en cours, on prend la dernière créée (ou on crée une erreur ?)
-        // Pour l'instant, on log sur la dernière mission active ou pending pour tester
+        // Si aucune mission en cours, on prend la derni re cr  e (ou on cr e une erreur ?)
+        // Pour l'instant, on log sur la derni re mission active ou pending pour tester
         if (!$mission) {
             $mission = Mission::latest()->first();
         }
 
         if (!$mission) {
-            // Création automatique d'une mission par défaut pour le test
+            // Cr ation automatique d'une mission par d faut pour le test
             $mission = new Mission();
-            $mission->nom = "Mission Auto-générée (Test)";
+            $mission->nom = "Mission Auto-g n r e (Test)";
             $mission->statut = "ongoing";
             $mission->date_mission = now();
-            $mission->operator_id = null; // Nullable pour auto-création
+            $mission->operator_id = null; // Nullable pour auto-cr ation
             $mission->save();
         }
 
@@ -268,7 +283,7 @@ class MissionController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Failed to create mission'], 500);
         }
 
-        // 2. Créer le point
+        // 2. Cr er le point
         $point = new PathPoint();
         $point->mission_id = $mission->id;
         $point->latitude = $validated['latitude'];
@@ -313,19 +328,19 @@ class MissionController extends Controller
             $missionId = Mission::latest()->first()?->id ?? 1;
         }
 
-        // 2. Décoder et sauvegarder l'image
+        // 2. D coder et sauvegarder l'image
         $image = $validated['image'];
         $image = str_replace('data:image/jpeg;base64,', '', $image);
         $image = str_replace(' ', '+', $image);
         $imageName = 'detection_' . time() . '_' . uniqid() . '.jpg';
         \Illuminate\Support\Facades\Storage::disk('public')->put('detections/' . $imageName, base64_decode($image));
 
-        // 3. Créer la détection (si au moins une détection YOLO est présente ou si on veut juste log l'image)
+        // 3. Cr er la d tection (si au moins une d tection YOLO est pr sente ou si on veut juste log l'image)
         $detection = new \App\Models\Detection();
         $detection->mission_id = $missionId;
         $detection->latitude = $validated['lat'] ?? 0;
         $detection->longitude = $validated['lon'] ?? 0;
-        // On prend la première classe détectée par YOLO par défaut
+        // On prend la premi re classe d tect e par YOLO par d faut
         $detection->class_ia = !empty($validated['detections']) ? $validated['detections'][0]['name'] : 'unknown';
         $detection->confidence = !empty($validated['detections']) ? ($validated['detections'][0]['confidence'] * 100) : 0;
         $detection->photo_path = 'detections/' . $imageName;

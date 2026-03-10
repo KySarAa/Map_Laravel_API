@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MissionController;
+use App\Http\Controllers\MqttController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -22,4 +23,8 @@ Route::post('/detection', [MissionController::class, 'apiStoreDetection']);
 Route::post('/video', [MissionController::class, 'apiVideoPush']);
 Route::post('/gnss/data', [MissionController::class, 'apiGnssData']);
 
+Route::get('/send-bj', [\App\Http\Controllers\MqttController::class, 'sendBj']);
+Route::get('/start', [MqttController::class, 'start']);
+
 Route::get('/mission/{id}/path', [MissionController::class, 'apiGetPath']);
+
