@@ -2,17 +2,54 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\MqttService;
+use Illuminate\Http\Request;
+use PhpMqtt\Client\Facades\MQTT;
 
 class MqttController extends Controller
 {
-    public function start(MqttService $mqtt)
+    public function startIA($name)
     {
-        $mqtt->send('raspberry/cmd', 'run:RTKfinal');
+        $ias = [
+            'yolov5'     => 'run:yolov5',
+            'yolobestpt' => 'run:yolobestpt',
+            'RTKfinal'   => 'run:RTKfinal',
+        ];
+
+        if (!isset($ias[$name])) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'IA inconnue',
+            ]);
+        }
+
+        MQTT::publish('raspberry/cmd', $ias[$name]);
 
         return response()->json([
-            'status' => 'ok',
-            'message' => 'Commande envoyee'
+            'status'  => 'ok',
+            'message' => "IA $name lancee",
+        ]);
+    }
+
+    public function stopIA($name)
+    {
+        $ias = [
+            'yolov5'     => 'stop:yolov5',
+            'yolobestpt' => 'stop:yolobestpt',
+            'RTKfinal'   => 'stop:RTKfinal',
+        ];
+
+        if (!isset($ias[$name])) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'IA inconnue',
+            ]);
+        }
+
+        MQTT::publish('raspberry/cmd', $ias[$name]);
+
+        return response()->json([
+            'status'  => 'ok',
+            'message' => "IA $name arretee",
         ]);
     }
 }

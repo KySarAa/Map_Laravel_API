@@ -31,6 +31,45 @@
     <!-- Flux Vid&eacute;o & IA -->
     @include('components.video-stream')
 
+<!-- Choix IA -->
+<div class="card" style="margin-top: 20px; padding: 15px;">
+    <h3>Choisir IA</h3>
+
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <select id="ia_choice" class="form-select" style="width: auto;">
+            <option value="">-- Selectionner une IA --</option>
+            <option value="yolov5">Yolov5</option>
+            <option value="yolobestpt">Yolobestpt</option>
+        </select>
+
+        <button onclick="launchIA()" class="btn btn-primary">
+            Lancer IA
+        </button>
+	<button onclick="stopAllIA()" class="btn btn-danger">Stop IA</button>
+    </div>
+    
+</div>
+
+<script>
+function launchIA() {
+    const ia = document.getElementById('ia_choice').value;
+
+    if (!ia) {
+        alert("Choisis une IA avant de lancer.");
+        return;
+    }
+
+    window.location.href = "/api/start-ia/" + ia;
+}
+
+function stopAllIA() {
+    fetch("/api/stop-ia/yolov5");
+    fetch("/api/stop-ia/yolobestpt");
+    alert("IA stoppee");
+}
+</script>
+
+</script>
 
 
     <!-- Contr les -->
@@ -62,10 +101,13 @@
         <p><strong>Mission en cours:</strong> {{ optional($mission)->nom ?? 'Aucune mission active' }}</p>
     </div>
 
+    
+
     <!-- Carte Interactive -->
     <div id="map"></div>
     </div>
 @endsection
+
 
 @section('scripts')
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -327,4 +369,28 @@
         // setInterval(loadDetections, 5000);
 
     </script>
+
+<script>
+function launchIA() {
+    const ia = document.getElementById('ia_choice').value;
+
+    if (!ia) {
+        alert("Choisis une IA avant de lancer.");
+        return;
+    }
+
+    fetch("/api/start-ia/" + ia, {
+        method: "GET"
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("IA lancee : " + ia);
+    })
+    .catch(err => {
+        alert("Erreur lors du lancement de l'IA");
+        console.error(err);
+    });
+}
+</script>
+
 @endsection
