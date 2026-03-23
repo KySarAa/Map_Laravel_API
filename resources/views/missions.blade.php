@@ -19,8 +19,8 @@
                         <div>
                             <h5 class="mb-1 fw-bold">{{ $mission->nom }}</h5>
                             <div class="small text-muted">
-                                🌿 {{ $mission->culture }} <span class="mx-1">|</span> 🚜
-                                {{ $mission->operator->name ?? 'N/A' }}
+                                Culture : {{ $mission->culture }} <span class="mx-1">|</span>
+                                Opérateur : {{ $mission->operator->name ?? 'N/A' }}
                             </div>
                         </div>
                         <div class="text-end">
@@ -37,7 +37,7 @@
             </a>
             <form action="{{ route('missions.destroy', $mission->id) }}" method="POST"
                 class="position-absolute end-0 top-50 translate-middle-y me-3"
-                onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette mission ?');">
+                onsubmit="return confirm('êtes-vous sur de vouloir supprimer cette mission ?');">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-link text-danger p-2" title="Supprimer">
@@ -53,7 +53,7 @@
         </div>
     @empty
         <div class="card shadow-sm border-0 rounded-4 text-center p-5 text-muted">
-            <div class="display-1 mb-3">📭</div>
+            <div class="display-1 mb-3">??</div>
             Aucune mission enregistrée.
         </div>
     @endforelse

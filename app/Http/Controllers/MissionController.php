@@ -40,24 +40,28 @@ class MissionController extends Controller
     }
 
     public function apiLogin(\Illuminate\Http\Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+	{
+		$credentials = $request->validate([
+			'email' => ['required', 'email'],
+			'password' => ['required'],
+		]);
 
-        if (Auth::attempt($credentials)) {
-            return response()->json([
-                'status' => 'success',
-                'user' => Auth::user()
-            ]);
-        }
+		if (Auth::attempt($credentials)) {
+			$user = Auth::user();
+			$token = $user->createToken('api')->plainTextToken;
 
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Identifiants incorrects'
-        ], 401);
-    }
+			return response()->json([
+				'status' => 'success',
+				'token' => $token,
+				'user' => $user,
+			]);
+		}
+	
+		return response()->json([
+			'status' => 'error',
+			'message' => 'Identifiants incorrects'
+		], 401);
+	}
 
     public function dashboardPage()
     {
@@ -179,14 +183,14 @@ class MissionController extends Controller
         // Automatisation MQTT
         try {
             if ($validated['status'] === 'ongoing') {
-                // Démarrage ou Reprise
+                // Dï¿½marrage ou Reprise
                 $mqtt->send('raspberry/cmd', 'run:RTKfinal');
             } elseif ($validated['status'] === 'completed' || $validated['status'] === 'cancelled') {
                 // Fin de mission ou Annulation
                 $mqtt->send('raspberry/cmd', 'stop:RTKfinal');
             }
         } catch (\Exception $e) {
-            // On log l'erreur mais on ne bloque pas la réponse API si le MQTT échoue
+            // On log l'erreur mais on ne bloque pas la rï¿½ponse API si le MQTT ï¿½choue
             \Illuminate\Support\Facades\Log::error("Erreur MQTT lors du changement de statut: " . $e->getMessage());
         }
 
@@ -247,7 +251,27 @@ class MissionController extends Controller
 
         return response()->json(['status' => 'success', 'id' => $detection->id]);
     }
-
+	
+	public function optionsPage(Request $request)
+	{
+		$currentMode = $request->session()->get('ui_mode', 'desktop');
+		return view('options', [
+			'currentMode' => $currentMode,
+		]);
+    }
+	
+	public function updateUiMode(Request $request)
+	{
+		$validated = $request->validate([
+			'ui_mode' => 'required|in:desktop,mobile',
+		]);
+		
+		$request->session()->put('ui_mode', $validated['ui_mode']);
+		
+		return redirect('/options')
+			->with('success', "Preferences d'affichage mises a jour.");
+	}
+	
     public function apiGnssData(Request $request)
     {
         // Endpoint simplifi  pour le script Python RTK

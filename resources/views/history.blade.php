@@ -4,7 +4,7 @@
 
 @section('content')
     <div style="margin-bottom: 20px;">
-        <h3 style="margin:0">Missions terminées</h3>
+        <h3 style="margin:0">Missions terminees</h3>
     </div>
 
     @forelse($missions as $mission)
@@ -16,7 +16,7 @@
                         {{-- @if($mission->trashed())
                         <span
                             style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; background: #ffebee; color: #c62828;">
-                            Supprimée
+                            Supprimee
                         </span>
                         @endif --}}
                         <span style="font-size: 0.8rem; color: #999;">{{ $mission->date_mission }}</span>
@@ -24,13 +24,13 @@
                 </div>
 
                 <div style="font-size: 0.9rem; color: #666;">
-                    🌿 {{ $mission->culture }} | 🚜 {{ $mission->operator->name ?? 'N/A' }}
+                    Culture : {{ $mission->culture }} | Operateur : {{ $mission->operator->name ?? 'N/A' }}
                 </div>
 
                 <div
                     style="display: flex; gap: 15px; font-size: 0.85rem; border-top: 1px solid #eee; padding-top: 8px; margin-top: 5px;">
-                    <span>📍 {{ $mission->points_trajet_count }} points</span>
-                    <span>⚠️ {{ $mission->detections_count ?? 0 }} détections</span>
+                    <span>Points trajet : {{ $mission->points_trajet_count }}</span>
+                    <span>Detections : {{ $mission->detections_count ?? 0 }}</span>
                 </div>
             </div>
         </a>
