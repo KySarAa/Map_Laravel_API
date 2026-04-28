@@ -78,6 +78,19 @@
         </div>
 
         <div class="col-6 col-md-4">
+            <a href="{{ route('statistics') }}"
+                class="card db-card h-100 text-decoration-none text-dark shadow-sm text-center p-3">
+                <div class="db-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                </div>
+                <div class="fw-bold">Statistiques</div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4">
             <a href="{{ url('/options') }}"
                class="card db-card h-100 text-decoration-none text-dark shadow-sm text-center p-3">
                 <div class="db-icon">

@@ -9,11 +9,16 @@ class MqttService
 {
     public function send($topic, $message)
     {
-        $server = '172.16.151.161';
-        $port = 1883;
+        $server = '0e6eab887f084d39be5a2e37743aa9bc.s1.eu.hivemq.cloud';
+        $port = 8883;
         $clientId = 'laravel-' . uniqid();
 
-        $settings = new ConnectionSettings();
+        $settings = (new ConnectionSettings)
+            ->setUsername('laravel')
+            ->setPassword('Zoe3****')
+            ->setUseTls(true)
+            ->setTlsVerifyPeer(true)
+            ->setTlsVerifyPeerName(true);
 
         $mqtt = new MqttClient($server, $port, $clientId);
         $mqtt->connect($settings, true);

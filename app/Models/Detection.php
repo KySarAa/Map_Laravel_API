@@ -9,10 +9,7 @@ class Detection extends Model
     protected $fillable = [
         'mission_id',
         'path_point_id',
-        'class_ia',
-        'confidence',
-        'applied_quantity',
-        'photo_path',
+        'is_weed',
         'latitude',
         'longitude'
     ];

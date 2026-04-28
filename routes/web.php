@@ -14,6 +14,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/dashboard', [MissionController::class, 'dashboardPage'])->name('dashboard');
+    Route::get('/statistics', [MissionController::class, 'statisticsPage'])->name('statistics');
     Route::get('/options', [MissionController::class, 'optionsPage'])->name('options');
     Route::post('/options/ui-mode', [MissionController::class, 'updateUiMode'])->name('options.ui_mode');
 

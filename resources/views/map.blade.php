@@ -122,9 +122,6 @@
 
                     <div class="controls">
                         @if(optional($mission)->statut === 'ongoing')
-                            <button type="button" onclick="updateStatus('paused')" class="btn btn-outline-secondary">
-                                Pause
-                            </button>
                             <button type="button" onclick="updateStatus('completed')" class="btn btn-outline-danger">
                                 Terminer
                             </button>

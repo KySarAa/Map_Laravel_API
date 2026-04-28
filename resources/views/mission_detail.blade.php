@@ -120,13 +120,17 @@
 
         var detections = {!! json_encode($mission->detections, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!};
         detections.forEach(function (d) {
+            var isWeed = d.is_weed ? true : false;
+            var iaText = isWeed ? 'Mauvaise herbe' : 'Plante';
+            var color = isWeed ? '#dc3545' : '#28a745';
+            
             L.circleMarker([d.latitude, d.longitude], {
                 radius: 6,
-                color: '#dc3545',
-                fillColor: '#dc3545',
+                color: color,
+                fillColor: color,
                 fillOpacity: 0.8,
                 weight: 2
-            }).addTo(detectionGroup).bindPopup("IA: " + d.class_ia + " (" + d.confidence + "%)");
+            }).addTo(detectionGroup).bindPopup("IA: " + iaText);
         });
     </script>
 @endsection

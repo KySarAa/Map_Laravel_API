@@ -65,7 +65,18 @@ class MissionController extends Controller
 
     public function dashboardPage()
     {
-        return view('dashboard');
+        $weedsCount = \App\Models\Detection::where('is_weed', 1)->count();
+        $lastPoint = \App\Models\PathPoint::latest('id')->first();
+        
+        return view('dashboard', compact('weedsCount', 'lastPoint'));
+    }
+
+    public function statisticsPage()
+    {
+        $weeds = \App\Models\Detection::where('is_weed', 1)->orderBy('created_at', 'desc')->paginate(15);
+        $weedsCount = \App\Models\Detection::where('is_weed', 1)->count();
+
+        return view('statistics', compact('weeds', 'weedsCount'));
     }
 
     public function mapPage(\Illuminate\Http\Request $request)
@@ -229,8 +240,9 @@ class MissionController extends Controller
             'mission_id' => 'required|exists:missions,id',
             'lat' => 'required|numeric',
             'lon' => 'required|numeric',
-            'class_ia' => 'required|string',
-            'confidence' => 'required|numeric'
+            'is_weed' => 'nullable|boolean',
+            'class_ia' => 'nullable|string', // Pour compatibilité avec l'ancien script
+            'confidence' => 'nullable|numeric' // Pour compatibilité
         ]);
 
         // TODO: G rer l'upload d'image si pr sent
@@ -242,8 +254,14 @@ class MissionController extends Controller
         $detection->mission_id = $validated['mission_id'];
         $detection->latitude = $validated['lat'];
         $detection->longitude = $validated['lon'];
-        $detection->class_ia = $validated['class_ia'];
-        $detection->confidence = $validated['confidence'];
+        
+        if (isset($validated['is_weed'])) {
+            $detection->is_weed = $validated['is_weed'];
+        } else if (isset($validated['class_ia'])) {
+            $detection->is_weed = (strtolower($validated['class_ia']) === 'weed') ? 1 : 0;
+        } else {
+            $detection->is_weed = 0;
+        }
         // $detection->photo_path = $path;
         // Note: point_trajet_id might be required by schema, need to handle nullable or find closest
         $detection->point_trajet_id = 1; // Temporary fix until logic to find closest point
@@ -280,6 +298,10 @@ class MissionController extends Controller
         $validated = $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            'altitude' => 'nullable|numeric',
+            'speed' => 'nullable|numeric',
+            'pressure' => 'nullable|numeric',
+            'timestamp' => 'nullable|integer',
             'fix_quality' => 'nullable|integer',
             'alerts' => 'nullable|array'
         ]);
@@ -307,12 +329,19 @@ class MissionController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Failed to create mission'], 500);
         }
 
-        // 2. Cr er le point
+        // 2. Créer le point
         $point = new PathPoint();
         $point->mission_id = $mission->id;
         $point->latitude = $validated['latitude'];
         $point->longitude = $validated['longitude'];
-        // On pourrait stocker fix_quality ou alerts si on avait les colonnes
+        $point->altitude = $validated['altitude'] ?? 0.0;
+        $point->speed = $validated['speed'] ?? 0.0;
+        $point->pressure = $validated['pressure'] ?? 0.0;
+        
+        if (isset($validated['timestamp'])) {
+            $point->timestamp = date('Y-m-d H:i:s', $validated['timestamp']);
+        }
+
         $point->save();
 
         return response()->json(['status' => 'success', 'mission_id' => $mission->id]);
@@ -364,10 +393,8 @@ class MissionController extends Controller
         $detection->mission_id = $missionId;
         $detection->latitude = $validated['lat'] ?? 0;
         $detection->longitude = $validated['lon'] ?? 0;
-        // On prend la premi re classe d tect e par YOLO par d faut
-        $detection->class_ia = !empty($validated['detections']) ? $validated['detections'][0]['name'] : 'unknown';
-        $detection->confidence = !empty($validated['detections']) ? ($validated['detections'][0]['confidence'] * 100) : 0;
-        $detection->photo_path = 'detections/' . $imageName;
+        // Déduction si c'est une mauvaise herbe d'après la classe YOLO
+        $detection->is_weed = (!empty($validated['detections']) && strtolower($validated['detections'][0]['name']) === 'weed') ? 1 : 0;
         $detection->point_trajet_id = 1; // Temporaire
         $detection->save();
 
