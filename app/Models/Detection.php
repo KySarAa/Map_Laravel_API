@@ -8,7 +8,7 @@ class Detection extends Model
 {
     protected $fillable = [
         'mission_id',
-        'path_point_id',
+        'point_trajet_id',
         'is_weed',
         'latitude',
         'longitude'

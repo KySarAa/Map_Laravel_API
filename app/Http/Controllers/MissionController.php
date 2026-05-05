@@ -237,12 +237,7 @@ class MissionController extends Controller
         // Expected: mission_id, lat, lon, class_ia, confidence, image (file or base64)
 
         $validated = $request->validate([
-            'mission_id' => 'required|exists:missions,id',
-            'lat' => 'required|numeric',
-            'lon' => 'required|numeric',
             'is_weed' => 'nullable|boolean',
-            'class_ia' => 'nullable|string', // Pour compatibilitÃ© avec l'ancien script
-            'confidence' => 'nullable|numeric' // Pour compatibilitÃ©
         ]);
 
         // TODO: G rer l'upload d'image si pr sent
@@ -250,25 +245,37 @@ class MissionController extends Controller
 
         // Cr er l'entr e
         // Note: Il faut adapter selon le mod le Detection
-        $detection = new \App\Models\Detection();
-        $detection->mission_id = $validated['mission_id'];
-        $detection->latitude = $validated['lat'];
-        $detection->longitude = $validated['lon'];
+	$mission = Mission::where('statut', 'ongoing')->latest()->first()
+                 ?? Mission::latest()->first();
         
-        if (isset($validated['is_weed'])) {
-            $detection->is_weed = $validated['is_weed'];
-        } else if (isset($validated['class_ia'])) {
-            $detection->is_weed = (strtolower($validated['class_ia']) === 'weed') ? 1 : 0;
-        } else {
-            $detection->is_weed = 0;
+        if (!$mission) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Aucune mission active'
+            ], 404);
         }
-        // $detection->photo_path = $path;
-        // Note: point_trajet_id might be required by schema, need to handle nullable or find closest
-        $detection->point_trajet_id = 1; // Temporary fix until logic to find closest point
-        $detection->save();
 
-        return response()->json(['status' => 'success', 'id' => $detection->id]);
-    }
+    	// Récupère le dernier point GPS de la mission (envoyé par la RTK)
+    	$lastPoint = PathPoint::where('mission_id', $mission->id)
+                              ->latest('id')
+                              ->first();
+
+    	$detection = new \App\Models\Detection();
+    	$detection->mission_id      = $mission->id;
+    	$detection->point_trajet_id = $lastPoint?->id ?? null;
+    	$detection->latitude        = $lastPoint?->latitude  ?? 0.0;
+    	$detection->longitude       = $lastPoint?->longitude ?? 0.0;
+    	$detection->is_weed         = $validated['is_weed'];
+    	$detection->save();
+
+    	return response()->json([
+            'status' => 'success',
+            'id'     => $detection->id,
+            'mission_id' => $mission->id,
+            'point_trajet_id' => $detection->point_trajet_id,
+        ]);    
+
+      }
 	
 	public function optionsPage(Request $request)
 	{
@@ -395,7 +402,8 @@ class MissionController extends Controller
         $detection->longitude = $validated['lon'] ?? 0;
         // DÃ©duction si c'est une mauvaise herbe d'aprÃ¨s la classe YOLO
         $detection->is_weed = (!empty($validated['detections']) && strtolower($validated['detections'][0]['name']) === 'weed') ? 1 : 0;
-        $detection->point_trajet_id = 1; // Temporaire
+        $lastPoint = PathPoint::where('mission_id', $validated['mission_id'])->latest('id')->first();
+	$detection->point_trajet_id = $lastPoint?->id ?? null;
         $detection->save();
 
         return response()->json(['status' => 'success', 'id' => $detection->id]);
