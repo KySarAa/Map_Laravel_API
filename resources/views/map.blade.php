@@ -85,6 +85,7 @@
                             <option value="">— Sélectionner un modèle —</option>
                             <option value="yolov5">Yolov5</option>
                             <option value="yolobestpt">Yolobestpt</option>
+							<option value="yolobestpt2">Yolobestpt2</option>
                         </select>
 
                         <button type="button" onclick="launchIA()" class="btn btn-success">
@@ -93,6 +94,12 @@
                         <button type="button" onclick="stopAllIA()" class="btn btn-outline-secondary">
                             Stop
                         </button>
+						<button type="button" onclick="toggleLight(true)" class="btn btn-warning">
+							ON
+						</button>
+						<button type="button" onclick="toggleLight(false)" class="btn btn-outline-warning">
+							OFF
+						</button>
                     </div>
                 </div>
             </div>
@@ -414,7 +421,19 @@
             fetch("/stop-ia/yolobestpt", {
                 method: "GET"
             }).catch(() => {});
+			fetch("/stop-ia/yolobestpt2", {
+                method: "GET"
+            }).catch(() => {});
         }
+		
+		function toggleLight(on) {
+			const url = on ? "/start-ia/light" : "/stop-ia/light";
+			fetch(url, { method: "GET" })
+				.catch(err => {
+					alert("Erreur lors du contrôle des lumières");
+					console.error(err);
+				});
+}
     </script>
 
 @endsection

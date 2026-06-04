@@ -12,6 +12,8 @@ class MqttController extends Controller
             'yolov5'     => 'run:yolov5',
             'yolobestpt' => 'run:yolobestpt',
             'RTKfinal'   => 'run:RTKfinal',
+			'yolobestpt2' => 'run:Yolobestpt2',
+			'light'      => 'run:light',
         ];
 
         if (!isset($ias[$name])) {
@@ -29,6 +31,8 @@ class MqttController extends Controller
             'yolov5'     => 'stop:yolov5',
             'yolobestpt' => 'stop:yolobestpt',
             'RTKfinal'   => 'stop:RTKfinal',
+			'yolobestpt2' => 'stop:Yolobestpt2',
+			'light'      => 'stop:light',
         ];
 
         if (!isset($ias[$name])) {
